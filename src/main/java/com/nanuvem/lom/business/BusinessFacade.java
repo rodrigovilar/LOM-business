@@ -82,8 +82,13 @@ public class BusinessFacade implements Facade {
 		return instanceService.findInstanceById(id);
 	}
 
-    public List<Instance> findInstancesByEntityId(Long entityId) {
-        return instanceService.findInstancesByEntityId(entityId);
-    }
+	public List<Instance> findInstancesByEntityId(Long entityId) {
+		return instanceService.findInstancesByEntityId(entityId);
+	}
+
+	public Instance update(Instance instance1) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }
