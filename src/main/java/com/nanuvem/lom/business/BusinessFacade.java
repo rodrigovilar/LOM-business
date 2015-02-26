@@ -74,6 +74,11 @@ public class BusinessFacade implements Facade {
 		return attributeService.update(attribute);
 	}
 
+	public Instance update(Instance instance) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public Instance create(Instance instance) {
 		return instanceService.create(instance);
 	}
@@ -85,10 +90,4 @@ public class BusinessFacade implements Facade {
 	public List<Instance> findInstancesByEntityId(Long entityId) {
 		return instanceService.findInstancesByEntityId(entityId);
 	}
-
-	public Instance update(Instance instance1) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

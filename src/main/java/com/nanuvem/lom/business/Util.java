@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.SerializationUtils;
-
 import com.nanuvem.lom.api.Attribute;
 import com.nanuvem.lom.api.AttributeValue;
 import com.nanuvem.lom.api.Entity;
