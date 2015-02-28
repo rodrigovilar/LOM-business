@@ -75,8 +75,7 @@ public class BusinessFacade implements Facade {
 	}
 
 	public Instance update(Instance instance) {
-		// TODO Auto-generated method stub
-		return null;
+		return instanceService.update(instance);
 	}
 
 	public Instance create(Instance instance) {
