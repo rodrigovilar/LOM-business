@@ -54,7 +54,6 @@ public class InstanceServiceImpl {
 			throw new MetadataException("Unknown entity id: "
 					+ instance.getEntity().getId());
 		}
-
 		instance.setEntity(entity);
 		validateAndAssignDefaultValueInAttributesValues(instance, entity);
 		List<AttributeValue> values = instance.getValues();
@@ -78,17 +77,27 @@ public class InstanceServiceImpl {
 		return instanceDao.findInstanceById(newInstance.getId());
 	}
 
+	public Instance update(Instance instance) {
+		this.instanceDao.update(instance);
+
+		for (AttributeValue value : instance.getValues()) {
+			this.attributeValueDao.update(value);
+		}
+		return instanceDao.findInstanceById(instance.getId());
+	}
+
 	private void validateValue(String configuration, AttributeValue value) {
 		List<ValidationError> errors = new ArrayList<ValidationError>();
 
 		AttributeTypeDefinition definition = definitionManager.get(value
 				.getAttribute().getType().name());
-		AttributeTypeValidator typeValidator = new AttributeTypeValidator(definition.getAttributeClass());
+		AttributeTypeValidator typeValidator = new AttributeTypeValidator(
+				definition.getAttributeClass());
 		typeValidator.validateValue(errors, null, value);
 
 		if (configuration != null && !configuration.isEmpty()) {
 			JsonNode jsonNode = load(configuration);
-			
+
 			for (AttributeValidator validator : definition.getValidators()) {
 				validator.validateValue(errors, jsonNode, value);
 			}
@@ -108,10 +117,10 @@ public class InstanceServiceImpl {
 						+ instance.getEntity().getFullName() + ": "
 						+ attributeValue.getAttribute().getName());
 			}
-//			this.validateTypeOfValue(attributeValue);
 
 			String configuration = attributeValue.getAttribute()
 					.getConfiguration();
+
 			if (configuration != null && !configuration.isEmpty()) {
 				JsonNode jsonNode = load(configuration);
 				this.applyDefaultValueWhenAvailable(attributeValue, jsonNode);
@@ -142,9 +151,9 @@ public class InstanceServiceImpl {
 		return this.instanceDao.findInstanceById(id);
 	}
 
-    public List<Instance> findInstancesByEntityId(Long entityId) {
-        return this.instanceDao.findInstancesByEntityId(entityId);
-    }
+	public List<Instance> findInstancesByEntityId(Long entityId) {
+		return this.instanceDao.findInstancesByEntityId(entityId);
+	}
 }
 
 class InstanceDaoDecorator implements InstanceDao {
@@ -179,11 +188,12 @@ class InstanceDaoDecorator implements InstanceDao {
 		instanceDao.delete(id);
 	}
 
-    public List<Instance> findInstancesByEntityId(Long entityId) {
-        List<Instance> instances = Util.clone(instanceDao.findInstancesByEntityId(entityId));
-        Util.removeDefaultNamespaceForInstance(instances);
-        return instances;
-    }
+	public List<Instance> findInstancesByEntityId(Long entityId) {
+		List<Instance> instances = Util.clone(instanceDao
+				.findInstancesByEntityId(entityId));
+		Util.removeDefaultNamespaceForInstance(instances);
+		return instances;
+	}
 
 }
 
@@ -200,5 +210,13 @@ class AttributeValueDaoDecorator implements AttributeValueDao {
 				.clone(value)));
 		Util.removeDefaultNamespace(createdValue);
 		return createdValue;
+	}
+
+	public AttributeValue update(AttributeValue value) {
+		AttributeValue updatedValue = Util.clone(attributeValueDao.update(Util
+				.clone(value)));
+		Util.removeDefaultNamespace(updatedValue);
+		return updatedValue;
+
 	}
 }
