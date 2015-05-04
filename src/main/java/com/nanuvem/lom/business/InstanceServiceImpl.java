@@ -43,20 +43,10 @@ public class InstanceServiceImpl {
 	}
 
 	public Instance create(Instance instance) {
-		Entity entity = this.validateExistenceOfTheEntity(instance);
-		
-		this.validateAndAssignDefaultValueInAttributesValues(instance, entity);
-		
-		List<AttributeValue> values = instance.getValues();
-		for (AttributeValue value : values) {
-			Attribute attribute = attributeService.findAttributeById(value
-					.getAttribute().getId());
-			validateValue(attribute.getConfiguration(), value);
-		}
+		List<AttributeValue> values = validateEntityAndAttributeValueOnInstance(instance);
 
 		List<AttributeValue> originalValues = new ArrayList<AttributeValue>(
 				values);
-
 		values.clear();
 		Instance newInstance = this.instanceDao.create(instance);
 
@@ -68,11 +58,46 @@ public class InstanceServiceImpl {
 		return instanceDao.findInstanceById(newInstance.getId());
 	}
 
-	public Instance update(Instance instance) {
-//		Entity entity = this.validateExistenceOfTheEntity(instance);
-		return this.instanceDao.update(instance);
+	private List<AttributeValue> validateEntityAndAttributeValueOnInstance(
+			Instance instance) {
+		if (instance.getEntity() == null) {
+			throw new MetadataException(
+					"Invalid value for Instance entity: The entity is mandatory");
+		}
+		Entity entity;
+		try {
+			entity = this.entityService.findById(instance.getEntity().getId());
+		} catch (MetadataException e) {
+			throw new MetadataException("Unknown entity id: "
+					+ instance.getEntity().getId());
+		}
+		instance.setEntity(entity);
+		validateAndAssignDefaultValueInAttributesValues(instance, entity);
+		List<AttributeValue> values = instance.getValues();
+		for (AttributeValue value : values) {
+			Attribute attribute = attributeService.findAttributeById(value
+					.getAttribute().getId());
+			validateValue(attribute.getConfiguration(), value);
+		}
+		return values;
 	}
-	
+
+	public Instance update(Instance instance) {
+		validateEntityAndAttributeValueOnInstance(instance);
+
+		this.instanceDao.update(instance);
+
+		for (AttributeValue value : instance.getValues()) {
+			value.setInstance(instance);
+			if (value.getId() == null) {
+				this.attributeValueDao.create(value);
+			} else {
+				this.attributeValueDao.update(value);
+			}
+		}
+		return instanceDao.findInstanceById(instance.getId());
+	}
+
 	private Entity validateExistenceOfTheEntity(Instance instance) {
 		if (instance.getEntity() == null) {
 			throw new MetadataException(
@@ -123,6 +148,7 @@ public class InstanceServiceImpl {
 
 			String configuration = attributeValue.getAttribute()
 					.getConfiguration();
+
 			if (configuration != null && !configuration.isEmpty()) {
 				JsonNode jsonNode = load(configuration);
 				this.applyDefaultValueWhenAvailable(attributeValue, jsonNode);
@@ -212,5 +238,13 @@ class AttributeValueDaoDecorator implements AttributeValueDao {
 				.clone(value)));
 		Util.removeDefaultNamespace(createdValue);
 		return createdValue;
+	}
+
+	public AttributeValue update(AttributeValue value) {
+		AttributeValue updatedValue = Util.clone(attributeValueDao.update(Util
+				.clone(value)));
+		Util.removeDefaultNamespace(updatedValue);
+		return updatedValue;
+
 	}
 }

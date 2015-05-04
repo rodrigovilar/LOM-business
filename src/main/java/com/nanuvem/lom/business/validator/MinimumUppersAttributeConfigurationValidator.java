@@ -18,6 +18,7 @@ public class MinimumUppersAttributeConfigurationValidator implements
 					uppercaseCharacterCounter++;
 				}
 			}
+
 			if (uppercaseCharacterCounter < minUppers) {
 				String messagePlural = minUppers > 1 ? "s" : "";
 
