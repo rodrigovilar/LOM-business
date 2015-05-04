@@ -43,6 +43,24 @@ public class InstanceServiceImpl {
 	}
 
 	public Instance create(Instance instance) {
+		List<AttributeValue> values = validateEntityAndAttributeValueOnInstance(instance);
+
+		List<AttributeValue> originalValues = new ArrayList<AttributeValue>(
+				values);
+
+		values.clear();
+		Instance newInstance = this.instanceDao.create(instance);
+
+		for (AttributeValue value : originalValues) {
+			value.setInstance(newInstance);
+			this.attributeValueDao.create(value);
+		}
+
+		return instanceDao.findInstanceById(newInstance.getId());
+	}
+
+	private List<AttributeValue> validateEntityAndAttributeValueOnInstance(
+			Instance instance) {
 		if (instance.getEntity() == null) {
 			throw new MetadataException(
 					"Invalid value for Instance entity: The entity is mandatory");
@@ -62,26 +80,21 @@ public class InstanceServiceImpl {
 					.getAttribute().getId());
 			validateValue(attribute.getConfiguration(), value);
 		}
-
-		List<AttributeValue> originalValues = new ArrayList<AttributeValue>(
-				values);
-
-		values.clear();
-		Instance newInstance = this.instanceDao.create(instance);
-
-		for (AttributeValue value : originalValues) {
-			value.setInstance(newInstance);
-			this.attributeValueDao.create(value);
-		}
-
-		return instanceDao.findInstanceById(newInstance.getId());
+		return values;
 	}
 
 	public Instance update(Instance instance) {
+		validateEntityAndAttributeValueOnInstance(instance);
+
 		this.instanceDao.update(instance);
 
 		for (AttributeValue value : instance.getValues()) {
-			this.attributeValueDao.update(value);
+			value.setInstance(instance);
+			if (value.getId() == null) {
+				this.attributeValueDao.create(value);
+			} else {
+				this.attributeValueDao.update(value);
+			}
 		}
 		return instanceDao.findInstanceById(instance.getId());
 	}
