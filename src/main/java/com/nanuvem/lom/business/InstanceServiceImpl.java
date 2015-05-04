@@ -43,30 +43,10 @@ public class InstanceServiceImpl {
 	}
 
 	public Instance create(Instance instance) {
-		if (instance.getEntity() == null) {
-			throw new MetadataException(
-					"Invalid value for Instance entity: The entity is mandatory");
-		}
-		Entity entity;
-		try {
-			entity = this.entityService.findById(instance.getEntity().getId());
-		} catch (MetadataException e) {
-			throw new MetadataException("Unknown entity id: "
-					+ instance.getEntity().getId());
-		}
-
-		instance.setEntity(entity);
-		validateAndAssignDefaultValueInAttributesValues(instance, entity);
-		List<AttributeValue> values = instance.getValues();
-		for (AttributeValue value : values) {
-			Attribute attribute = attributeService.findAttributeById(value
-					.getAttribute().getId());
-			validateValue(attribute.getConfiguration(), value);
-		}
+		List<AttributeValue> values = validateEntityAndAttributeValueOnInstance(instance);
 
 		List<AttributeValue> originalValues = new ArrayList<AttributeValue>(
 				values);
-
 		values.clear();
 		Instance newInstance = this.instanceDao.create(instance);
 
@@ -78,17 +58,74 @@ public class InstanceServiceImpl {
 		return instanceDao.findInstanceById(newInstance.getId());
 	}
 
+	private List<AttributeValue> validateEntityAndAttributeValueOnInstance(
+			Instance instance) {
+		if (instance.getEntity() == null) {
+			throw new MetadataException(
+					"Invalid value for Instance entity: The entity is mandatory");
+		}
+		Entity entity;
+		try {
+			entity = this.entityService.findById(instance.getEntity().getId());
+		} catch (MetadataException e) {
+			throw new MetadataException("Unknown entity id: "
+					+ instance.getEntity().getId());
+		}
+		instance.setEntity(entity);
+		validateAndAssignDefaultValueInAttributesValues(instance, entity);
+		List<AttributeValue> values = instance.getValues();
+		for (AttributeValue value : values) {
+			Attribute attribute = attributeService.findAttributeById(value
+					.getAttribute().getId());
+			validateValue(attribute.getConfiguration(), value);
+		}
+		return values;
+	}
+
+	public Instance update(Instance instance) {
+		validateEntityAndAttributeValueOnInstance(instance);
+
+		this.instanceDao.update(instance);
+
+		for (AttributeValue value : instance.getValues()) {
+			value.setInstance(instance);
+			if (value.getId() == null) {
+				this.attributeValueDao.create(value);
+			} else {
+				this.attributeValueDao.update(value);
+			}
+		}
+		return instanceDao.findInstanceById(instance.getId());
+	}
+
+	private Entity validateExistenceOfTheEntity(Instance instance) {
+		if (instance.getEntity() == null) {
+			throw new MetadataException(
+					"Invalid value for Instance entity: The entity is mandatory");
+		}
+		Entity entity;
+		try {
+			entity = this.entityService.findById(instance.getEntity().getId());
+		} catch (MetadataException e) {
+			throw new MetadataException("Unknown entity id: "
+					+ instance.getEntity().getId());
+		}
+		instance.setEntity(entity);
+		return entity;
+	}
+
 	private void validateValue(String configuration, AttributeValue value) {
 		List<ValidationError> errors = new ArrayList<ValidationError>();
 
 		AttributeTypeDefinition definition = definitionManager.get(value
 				.getAttribute().getType().name());
-		AttributeTypeValidator typeValidator = new AttributeTypeValidator(definition.getAttributeClass());
+		AttributeTypeValidator typeValidator = new AttributeTypeValidator(
+				definition.getAttributeClass());
 		typeValidator.validateValue(errors, null, value);
 
 		if (configuration != null && !configuration.isEmpty()) {
 			JsonNode jsonNode = load(configuration);
-			
+
 			for (AttributeValidator validator : definition.getValidators()) {
 				validator.validateValue(errors, jsonNode, value);
 			}
@@ -108,10 +145,10 @@ public class InstanceServiceImpl {
 						+ instance.getEntity().getFullName() + ": "
 						+ attributeValue.getAttribute().getName());
 			}
-//			this.validateTypeOfValue(attributeValue);
 
 			String configuration = attributeValue.getAttribute()
 					.getConfiguration();
+
 			if (configuration != null && !configuration.isEmpty()) {
 				JsonNode jsonNode = load(configuration);
 				this.applyDefaultValueWhenAvailable(attributeValue, jsonNode);
@@ -142,9 +179,9 @@ public class InstanceServiceImpl {
 		return this.instanceDao.findInstanceById(id);
 	}
 
-    public List<Instance> findInstancesByEntityId(Long entityId) {
-        return this.instanceDao.findInstancesByEntityId(entityId);
-    }
+	public List<Instance> findInstancesByEntityId(Long entityId) {
+		return this.instanceDao.findInstancesByEntityId(entityId);
+	}
 }
 
 class InstanceDaoDecorator implements InstanceDao {
@@ -179,11 +216,12 @@ class InstanceDaoDecorator implements InstanceDao {
 		instanceDao.delete(id);
 	}
 
-    public List<Instance> findInstancesByEntityId(Long entityId) {
-        List<Instance> instances = Util.clone(instanceDao.findInstancesByEntityId(entityId));
-        Util.removeDefaultNamespaceForInstance(instances);
-        return instances;
-    }
+	public List<Instance> findInstancesByEntityId(Long entityId) {
+		List<Instance> instances = Util.clone(instanceDao
+				.findInstancesByEntityId(entityId));
+		Util.removeDefaultNamespaceForInstance(instances);
+		return instances;
+	}
 
 }
 
@@ -200,5 +238,13 @@ class AttributeValueDaoDecorator implements AttributeValueDao {
 				.clone(value)));
 		Util.removeDefaultNamespace(createdValue);
 		return createdValue;
+	}
+
+	public AttributeValue update(AttributeValue value) {
+		AttributeValue updatedValue = Util.clone(attributeValueDao.update(Util
+				.clone(value)));
+		Util.removeDefaultNamespace(updatedValue);
+		return updatedValue;
+
 	}
 }

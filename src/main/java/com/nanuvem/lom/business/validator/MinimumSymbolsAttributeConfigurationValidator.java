@@ -11,23 +11,25 @@ public class MinimumSymbolsAttributeConfigurationValidator implements
 	public void validate(List<ValidationError> errors, String attribute,
 			String value, Integer minSymbols, boolean defaultValue) {
 
-		int numericSymbolCounter = 0;
-		for (int i = 0; i < value.length(); i++) {
-			if (!Character.isLetterOrDigit(value.toCharArray()[i])) {
-				numericSymbolCounter++;
+		if (value != null) {
+			int numericSymbolCounter = 0;
+			for (int i = 0; i < value.length(); i++) {
+				if (!Character.isLetterOrDigit(value.toCharArray()[i])) {
+					numericSymbolCounter++;
+				}
 			}
-		}
 
-		if (numericSymbolCounter < minSymbols) {
-			String messagePlural = minSymbols > 1 ? "s" : "";
+			if (numericSymbolCounter < minSymbols) {
+				String messagePlural = minSymbols > 1 ? "s" : "";
 
-			String message = (defaultValue) ? 
-					"the default value must have at least "
-					+ minSymbols + " symbol character" + messagePlural: 
-					"The value for '" + attribute + "' must have at least "
-					+ minSymbols + " symbol character" + messagePlural;
+				String message = (defaultValue) ? "the default value must have at least "
+						+ minSymbols + " symbol character" + messagePlural
+						: "The value for '" + attribute
+								+ "' must have at least " + minSymbols
+								+ " symbol character" + messagePlural;
 
-			ValidationError.addError(errors, message);
+				ValidationError.addError(errors, message);
+			}
 		}
 	}
 
