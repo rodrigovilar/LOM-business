@@ -2,91 +2,103 @@ package com.nanuvem.lom.business;
 
 import java.util.List;
 
-import com.nanuvem.lom.api.Attribute;
-import com.nanuvem.lom.api.Entity;
+import com.nanuvem.lom.api.PropertyType;
+import com.nanuvem.lom.api.EntityType;
 import com.nanuvem.lom.api.Facade;
-import com.nanuvem.lom.api.Instance;
+import com.nanuvem.lom.api.Entity;
 import com.nanuvem.lom.api.dao.DaoFactory;
-import com.nanuvem.lom.business.validator.definition.AttributeTypeDefinitionManager;
+import com.nanuvem.lom.business.validator.definition.TypeDefinitionManager;
 
 public class BusinessFacade implements Facade {
 
-	private EntityServiceImpl entityService;
-	private AttributeServiceImpl attributeService;
-	private InstanceServiceImpl instanceService;
+	private EntityTypeServiceImpl entityService;
+	private PropertyTypeServiceImpl attributeService;
+	private EntityServiceImpl instanceService;
+
+	private DaoFactory daoFactory;
 
 	public BusinessFacade(DaoFactory daoFactory) {
-		entityService = new EntityServiceImpl(daoFactory);
-		AttributeTypeDefinitionManager deployers = new AttributeTypeDefinitionManager();
-		attributeService = new AttributeServiceImpl(daoFactory, entityService,
+		this.daoFactory = daoFactory;
+		entityService = new EntityTypeServiceImpl(daoFactory);
+		TypeDefinitionManager deployers = new TypeDefinitionManager();
+		attributeService = new PropertyTypeServiceImpl(daoFactory, entityService,
 				deployers);
-		instanceService = new InstanceServiceImpl(daoFactory, entityService,
+		instanceService = new EntityServiceImpl(daoFactory, entityService,
 				attributeService, deployers);
 	}
 
-	public EntityServiceImpl getEntityService() {
+	public EntityTypeServiceImpl getEntityService() {
 		return this.entityService;
 	}
 
-	public Entity create(Entity entity) {
+	public EntityType create(EntityType entity) {
 		return entityService.create(entity);
 	}
 
-	public Entity findEntityById(Long id) {
+	public EntityType findEntityTypeById(Long id) {
 		return entityService.findById(id);
 	}
 
-	public Entity findEntityByFullName(String fullName) {
+	public EntityType findEntityTypeByFullName(String fullName) {
 		return entityService.findByFullName(fullName);
 	}
 
-	public List<Entity> listAllEntities() {
+	public List<EntityType> listAllEntitiesTypes() {
 		return entityService.listAll();
 	}
 
-	public List<Entity> listEntitiesByFullName(String fragment) {
+	public List<EntityType> listEntitiesTypesByFullName(String fragment) {
 		return entityService.listByFullName(fragment);
 	}
 
-	public Entity update(Entity entity) {
+	public EntityType update(EntityType entity) {
 		return entityService.update(entity);
 	}
 
-	public void deleteEntity(Long id) {
+	public void deleteEntityType(Long id) {
 		entityService.delete(id);
 	}
 
-	public Attribute create(Attribute attribute) {
+	public PropertyType create(PropertyType attribute) {
 		return attributeService.create(attribute);
 	}
 
-	public Attribute findAttributeById(Long id) {
-		return attributeService.findAttributeById(id);
+	public PropertyType findPropertyTypeById(Long id) {
+		return attributeService.findPropertyTypeById(id);
 	}
 
-	public Attribute findAttributeByNameAndEntityFullName(String name,
+	public PropertyType findPropertyTypeByNameAndFullnameEntityType(String name,
 			String fullEntityName) {
-		return attributeService.findAttributeByNameAndEntityFullName(name,
+		return attributeService.findPropertyTypeByNameAndEntityTypeFullName(name,
 				fullEntityName);
 	}
 
-	public Attribute update(Attribute attribute) {
+	public List<PropertyType> findPropertiesTypesByFullNameEntityType(String fullnameEntity) {
+		return attributeService.findAttributesByFullNameEntity(fullnameEntity);
+	}
+
+	public PropertyType update(PropertyType attribute) {
 		return attributeService.update(attribute);
 	}
 
-	public Instance update(Instance instance) {
+	public Entity update(Entity instance) {
 		return instanceService.update(instance);
 	}
 
-	public Instance create(Instance instance) {
+	public Entity create(Entity instance) {
 		return instanceService.create(instance);
 	}
 
-	public Instance findInstanceById(Long id) {
+	public Entity findEntityById(Long id) {
 		return instanceService.findInstanceById(id);
 	}
 
-	public List<Instance> findInstancesByEntityId(Long entityId) {
+	public List<Entity> findEntitiesByEntityTypeId(Long entityId) {
 		return instanceService.findInstancesByEntityId(entityId);
+	}
+
+	@Override
+	public DaoFactory getDaoFactory() {
+		return this.daoFactory;
 	}
 }

@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.codehaus.jackson.JsonNode;
 
-import com.nanuvem.lom.api.Attribute;
-import com.nanuvem.lom.api.AttributeValue;
+import com.nanuvem.lom.api.PropertyType;
+import com.nanuvem.lom.api.Property;
 import com.nanuvem.lom.business.validator.ValidationError;
 
 public class MandatoryValidator implements
@@ -17,13 +17,13 @@ public class MandatoryValidator implements
 	}
 
 	public void validateValue(List<ValidationError> errors,
-			JsonNode configuration, AttributeValue value) {
-		if (configuration != null && configuration.has(Attribute.MANDATORY_CONFIGURATION_NAME)) {
+			JsonNode configuration, Property value) {
+		if (configuration != null && configuration.has(PropertyType.MANDATORY_CONFIGURATION_NAME)) {
 
-			boolean isMandatory = configuration.get(Attribute.MANDATORY_CONFIGURATION_NAME).getBooleanValue();
+			boolean isMandatory = configuration.get(PropertyType.MANDATORY_CONFIGURATION_NAME).getBooleanValue();
 
 			if (isMandatory && (value.getValue() == null || value.getValue().isEmpty())) {
-				ValidationError.addError(errors, "The value for the '" + value.getAttribute().getName() + "' attribute is mandatory");
+				ValidationError.addError(errors, "The value for the '" + value.getPropertyType().getName() + "' attribute is mandatory");
 			}
 		}	}
 

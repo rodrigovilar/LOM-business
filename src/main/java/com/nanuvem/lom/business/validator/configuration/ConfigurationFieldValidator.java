@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.codehaus.jackson.JsonNode;
 
-import com.nanuvem.lom.api.AttributeValue;
+import com.nanuvem.lom.api.Property;
 import com.nanuvem.lom.business.validator.ValidationError;
 
 public class ConfigurationFieldValidator implements AttributeValidator {
@@ -42,7 +42,7 @@ public class ConfigurationFieldValidator implements AttributeValidator {
 	}
 
 	public void validateValue(List<ValidationError> errors,
-			JsonNode configuration, AttributeValue value) {
+			JsonNode configuration, Property value) {
 		//Do not need to validate value
 	}
 

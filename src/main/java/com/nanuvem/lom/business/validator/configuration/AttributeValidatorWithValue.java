@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.codehaus.jackson.JsonNode;
 
-import com.nanuvem.lom.api.AttributeValue;
+import com.nanuvem.lom.api.Property;
 import com.nanuvem.lom.business.validator.ValidationError;
 import com.nanuvem.lom.business.validator.ValueValidator;
 
@@ -42,11 +42,11 @@ public class AttributeValidatorWithValue<T> implements
 	}
 
 	public void validateValue(List<ValidationError> errors,
-			JsonNode configuration, AttributeValue value) {
+			JsonNode configuration, Property value) {
 		if (configuration != null && configuration.has(field)) {
 
 			T configurationValue = getConfigurationValue(configuration);
-			valueValidator.validate(errors, value.getAttribute().getName(), value.getValue(),
+			valueValidator.validate(errors, value.getPropertyType().getName(), value.getValue(),
 					configurationValue, false);
 		}
 	}

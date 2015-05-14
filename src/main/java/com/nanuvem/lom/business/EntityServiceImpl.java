@@ -1,234 +1,250 @@
 package com.nanuvem.lom.business;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
+import org.codehaus.jackson.JsonNode;
+
+import com.nanuvem.lom.api.PropertyType;
+import com.nanuvem.lom.api.Property;
+import com.nanuvem.lom.api.EntityType;
 import com.nanuvem.lom.api.Entity;
 import com.nanuvem.lom.api.MetadataException;
+import com.nanuvem.lom.api.dao.PropertyDao;
 import com.nanuvem.lom.api.dao.DaoFactory;
 import com.nanuvem.lom.api.dao.EntityDao;
+import com.nanuvem.lom.api.util.JsonNodeUtil;
+import com.nanuvem.lom.business.validator.ValidationError;
+import com.nanuvem.lom.business.validator.configuration.TypeValidator;
+import com.nanuvem.lom.business.validator.configuration.AttributeValidator;
+import com.nanuvem.lom.business.validator.definition.TypeDefinition;
+import com.nanuvem.lom.business.validator.definition.TypeDefinitionManager;
 
 public class EntityServiceImpl {
 
-    private EntityDao dao;
+	private final String PREFIX_EXCEPTION_MESSAGE_VALUE = "Invalid value for the Instance. ";
 
-    public static final String DEFAULT_NAMESPACE = "default";
+	private EntityDao instanceDao;
+	private PropertyDao attributeValueDao;
+	private EntityTypeServiceImpl entityService;
+	private PropertyTypeServiceImpl attributeService;
+	private TypeDefinitionManager definitionManager;
 
-    EntityServiceImpl(DaoFactory factory) {
-        this.dao = new EntityDaoDecorator(factory.createEntityDao());
-    }
+	EntityServiceImpl(DaoFactory daoFactory, EntityTypeServiceImpl entityService,
+			PropertyTypeServiceImpl attributeService,
+			TypeDefinitionManager definitionManager) {
+		this.entityService = entityService;
+		this.attributeService = attributeService;
+		this.definitionManager = definitionManager;
+		this.instanceDao = new InstanceDaoDecorator(
+				daoFactory.createEntityDao());
+		this.attributeValueDao = new AttributeValueDaoDecorator(
+				daoFactory.createPropertyDao());
+	}
 
-    public Entity create(Entity entity) {
-        validateEntity(entity);
-        Entity createdEntity = dao.create(entity);
-        return createdEntity;
-    }
+	public Entity create(Entity instance) {
+		List<Property> values = validateEntityAndAttributeValueOnInstance(instance);
 
-    private void validateEntity(Entity entity) {
-        if (entity.getName() == null || entity.getName().equals("")) {
-            throw new MetadataException("The name of an Entity is mandatory");
-        }
+		List<Property> originalValues = new ArrayList<Property>(
+				values);
+		values.clear();
+		Entity newInstance = this.instanceDao.create(instance);
 
-        if (entity.getNamespace() == null) {
-            entity.setNamespace("");
-        }
+		for (Property value : originalValues) {
+			value.setEntity(newInstance);
+			this.attributeValueDao.create(value);
+		}
 
-        lowerCase(entity);
+		return instanceDao.findInstanceById(newInstance.getId());
+	}
 
-        validadeNameAndNamespacePattern(entity);
-        validadeEntityDuplication(entity);
-    }
+	private List<Property> validateEntityAndAttributeValueOnInstance(
+			Entity instance) {
+		if (instance.getEntityType() == null) {
+			throw new MetadataException(
+					"Invalid value for Instance entity: The entity is mandatory");
+		}
+		EntityType entity;
+		try {
+			entity = this.entityService.findById(instance.getEntityType().getId());
+		} catch (MetadataException e) {
+			throw new MetadataException("Unknown entity id: "
+					+ instance.getEntityType().getId());
+		}
+		instance.setEntityType(entity);
+		validateAndAssignDefaultValueInAttributesValues(instance, entity);
+		List<Property> values = instance.getProperties();
+		for (Property value : values) {
+			PropertyType attribute = attributeService.findPropertyTypeById(value
+					.getPropertyType().getId());
+			validateValue(attribute.getConfiguration(), value);
+		}
+		return values;
+	}
 
-    private void lowerCase(Entity entity) {
-        entity.setName(entity.getName().toLowerCase());
-        entity.setNamespace(entity.getNamespace().toLowerCase());
-    }
-    
-    private void validadeNameAndNamespacePattern(Entity entity) {
-        String namespace = entity.getNamespace();
+	public Entity update(Entity instance) {
+		validateEntityAndAttributeValueOnInstance(instance);
 
-        if (!namespace.equals("") && !Pattern.matches("[a-zA-Z1-9.]{1,}", namespace)) {
-            throw new MetadataException("Invalid value for Entity namespace: " + namespace);
-        }
+		this.instanceDao.update(instance);
 
-        if (!Pattern.matches("[a-zA-Z1-9]{1,}", entity.getName())) {
-            throw new MetadataException("Invalid value for Entity name: " + entity.getName());
-        }
-    }
+		for (Property value : instance.getProperties()) {
+			value.setEntity(instance);
+			if (value.getId() == null) {
+				this.attributeValueDao.create(value);
+			} else {
+				this.attributeValueDao.update(value);
+			}
+		}
+		return instanceDao.findInstanceById(instance.getId());
+	}
 
-    private void validadeEntityDuplication(Entity entity) {
-        Entity found = null;
-        try {
-            found = findByFullName(entity.getFullName());
-        } catch (MetadataException me) {
-            found = null;
-        }
+	private EntityType validateExistenceOfTheEntity(Entity instance) {
+		if (instance.getEntityType() == null) {
+			throw new MetadataException(
+					"Invalid value for Instance entity: The entity is mandatory");
+		}
+		EntityType entity;
+		try {
+			entity = this.entityService.findById(instance.getEntityType().getId());
+		} catch (MetadataException e) {
+			throw new MetadataException("Unknown entity id: "
+					+ instance.getEntityType().getId());
+		}
+		instance.setEntityType(entity);
+		return entity;
+	}
 
-        if (found != null && !found.getId().equals(entity.getId())) {
-            StringBuilder message = new StringBuilder();
-            message.append("The ");
-            message.append(found.getFullName());
-            message.append(" Entity already exists");
-            throw new MetadataException(message.toString());
-        }
-    }
+	private void validateValue(String configuration, Property value) {
+		List<ValidationError> errors = new ArrayList<ValidationError>();
 
-    // There is no test case for classFullName = null. How should the message
-    // being thrown exception in this case?
-    public Entity findByFullName(String classFullName) {
-        String namespace = null;
-        String name = null;
+		TypeDefinition definition = definitionManager.get(value
+				.getPropertyType().getType().name());
+		TypeValidator typeValidator = new TypeValidator(
+				definition.getAttributeClass());
+		typeValidator.validateValue(errors, null, value);
 
-        if (classFullName.contains(".")) {
-            namespace = classFullName.substring(0, classFullName.lastIndexOf("."));
-            name = classFullName.substring(classFullName.lastIndexOf(".") + 1, classFullName.length());
-        } else {
-            namespace = "";
-            name = classFullName;
-        }
+		if (configuration != null && !configuration.isEmpty()) {
+			JsonNode jsonNode = load(configuration);
 
-        if (!Pattern.matches("[a-zA-Z1-9.]{1,}", namespace) && !namespace.isEmpty()) {
-            this.formatStringAndThrowsExceptionInvalidKeyForEntity(classFullName);
-        }
+			for (AttributeValidator validator : definition.getValidators()) {
+				validator.validateValue(errors, jsonNode, value);
+			}
+		}
 
-        if (!Pattern.matches("[a-zA-Z1-9]{1,}", name) && !name.isEmpty()) {
-            this.formatStringAndThrowsExceptionInvalidKeyForEntity(classFullName);
-        }
+		Util.throwValidationErrors(errors, PREFIX_EXCEPTION_MESSAGE_VALUE);
 
-        if (namespace.isEmpty()) {
-            namespace = "";
-        }
+	}
 
-        Entity classByNamespaceAndName = dao.findByFullName(classFullName);
+	private void validateAndAssignDefaultValueInAttributesValues(
+			Entity instance, EntityType entity) {
 
-        if (classByNamespaceAndName == null) {
-            if (classFullName.startsWith(".")) {
-                classFullName = classFullName.substring(1);
-            }
-            if (classFullName.endsWith(".")) {
-                classFullName = classFullName.substring(0, classFullName.length() - 1);
-            }
-            throw new MetadataException("Entity not found: " + classFullName);
-        }
+		for (Property attributeValue : instance.getProperties()) {
+			if (!(entity.getPropertiesTypes()
+					.contains(attributeValue.getPropertyType()))) {
+				throw new MetadataException("Unknown attribute for "
+						+ instance.getEntityType().getFullName() + ": "
+						+ attributeValue.getPropertyType().getName());
+			}
 
-        return classByNamespaceAndName;
-    }
+			String configuration = attributeValue.getPropertyType()
+					.getConfiguration();
 
-    public Entity findById(Long id) {
-        Entity entity = this.dao.findById(id);
-        return entity;
-    }
+			if (configuration != null && !configuration.isEmpty()) {
+				JsonNode jsonNode = load(configuration);
+				this.applyDefaultValueWhenAvailable(attributeValue, jsonNode);
+			}
+		}
+	}
 
-    public List<Entity> listAll() {
-        List<Entity> list = dao.listAll();
-        return list;
-    }
+	private JsonNode load(String configuration) {
+		JsonNode jsonNode = JsonNodeUtil.validate(configuration,
+				"Invalid value for Attribute configuration: " + configuration);
+		return jsonNode;
+	}
 
-    public List<Entity> listByFullName(String fragment) {
-        if (fragment == null) {
-            fragment = "";
-        }
+	private void applyDefaultValueWhenAvailable(Property attributeValue,
+			JsonNode jsonNode) {
 
-        if (!Pattern.matches("[a-zA-Z1-9.]{1,}", fragment) && !fragment.isEmpty()) {
-            throw new MetadataException("Invalid value for Entity full name: " + fragment);
-        }
+		String defaultConfiguration = PropertyType.DEFAULT_CONFIGURATION_NAME;
+		if (jsonNode.has(defaultConfiguration)) {
+			String defaultField = jsonNode.get(defaultConfiguration).asText();
 
-        List<Entity> list = this.dao.listByFullName(fragment);
-        return list;
-    }
+			if (attributeValue.getValue() == null && defaultField != null) {
+				attributeValue.setValue(defaultField);
+			}
+		}
+	}
 
-    private void formatStringAndThrowsExceptionInvalidKeyForEntity(String value) {
-        if (value.startsWith(".")) {
-            value = value.substring(1);
-        }
-        if (value.endsWith(".")) {
-            value = value.substring(0, value.length() - 1);
-        }
-        throw new MetadataException("Invalid key for Entity: " + value);
+	public Entity findInstanceById(Long id) {
+		return this.instanceDao.findInstanceById(id);
+	}
 
-    }
+	public List<Entity> findInstancesByEntityId(Long entityId) {
+		return this.instanceDao.findInstancesByEntityId(entityId);
+	}
+}
 
-    public Entity update(Entity entity) {
-        this.validateEntityOnUpdate(entity);
-        this.validateEntity(entity);
-        Entity updatedEntity = this.dao.update(entity);
-        return updatedEntity;
-    }
+class InstanceDaoDecorator implements EntityDao {
 
-    private void validateEntityOnUpdate(Entity updateEntity) {
-        if (updateEntity.getId() == null && updateEntity.getVersion() == null) {
-            throw new MetadataException("The version and id of an Entity are mandatory on update");
-        } else if (updateEntity.getId() == null) {
-            throw new MetadataException("The id of an Entity is mandatory on update");
-        } else if (updateEntity.getVersion() == null) {
-            throw new MetadataException("The version of an Entity is mandatory on update");
-        }
-    }
+	private EntityDao instanceDao;
 
-    public void delete(long id) {
-        this.dao.delete(id);
-    }
+	public InstanceDaoDecorator(EntityDao instanceDao) {
+		this.instanceDao = instanceDao;
+	}
+
+	public Entity create(Entity instance) {
+		Entity createdInstance = Util.clone(instanceDao.create(Util
+				.clone(instance)));
+		Util.removeDefaultNamespace(createdInstance);
+		return createdInstance;
+	}
+
+	public Entity findInstanceById(Long id) {
+		Entity instance = Util.clone(instanceDao.findInstanceById(id));
+		Util.removeDefaultNamespace(instance);
+		return instance;
+	}
+
+	public Entity update(Entity instance) {
+		Entity updatedInstance = Util.clone(instanceDao.update(Util
+				.clone(instance)));
+		Util.removeDefaultNamespace(updatedInstance);
+		return updatedInstance;
+	}
+
+	public void delete(Long id) {
+		instanceDao.delete(id);
+	}
+
+	public List<Entity> findInstancesByEntityId(Long entityId) {
+		List<Entity> instances = Util.clone(instanceDao
+				.findInstancesByEntityId(entityId));
+		Util.removeDefaultNamespaceForInstance(instances);
+		return instances;
+	}
 
 }
 
-class EntityDaoDecorator implements EntityDao {
+class AttributeValueDaoDecorator implements PropertyDao {
 
-    private EntityDao entityDao;
+	private PropertyDao attributeValueDao;
 
-    public EntityDaoDecorator(EntityDao entityDao) {
-        this.entityDao = entityDao;
-    }
+	public AttributeValueDaoDecorator(PropertyDao attributeValueDao) {
+		this.attributeValueDao = attributeValueDao;
+	}
 
-    public Entity create(Entity entity) {
-        Entity entityClone = Util.clone(entity);
-        Util.setDefaultNamespace(entityClone);
+	public Property create(Property value) {
+		Property createdValue = Util.clone(attributeValueDao.create(Util
+				.clone(value)));
+		Util.removeDefaultNamespace(createdValue);
+		return createdValue;
+	}
 
-        Entity createdEntity = entityDao.create(entityClone);
+	public Property update(Property value) {
+		Property updatedValue = Util.clone(attributeValueDao.update(Util
+				.clone(value)));
+		Util.removeDefaultNamespace(updatedValue);
+		return updatedValue;
 
-        Entity createdEntityClone = Util.clone(createdEntity);
-        Util.removeDefaultNamespace(createdEntityClone);
-        return createdEntityClone;
-    }
-
-    public List<Entity> listAll() {
-        List<Entity> list = Util.clone(entityDao.listAll());
-        Util.removeDefaultNamespace(list);
-        return list;
-    }
-
-    public Entity findById(Long id) {
-        Entity entity = Util.clone(entityDao.findById(id));
-        Util.removeDefaultNamespace(entity);
-        return entity;
-    }
-
-    public List<Entity> listByFullName(String fragment) {
-        List<Entity> list = Util.clone(entityDao.listByFullName(fragment));
-        Util.removeDefaultNamespace(list);
-        return list;
-    }
-
-    public Entity findByFullName(String fullName) {
-        fullName = Util.setDefaultNamespace(fullName);
-
-        Entity entity = Util.clone(entityDao.findByFullName(fullName));
-        Util.removeDefaultNamespace(entity);
-        return entity;
-    }
-
-    public Entity update(Entity entity) {
-        Entity entityClone = Util.clone(entity);
-        Util.setDefaultNamespace(entityClone);
-
-        Entity updatedEntity = entityDao.update(entityClone);
-
-        Entity updatedEntityClone = Util.clone(updatedEntity);
-        Util.removeDefaultNamespace(updatedEntityClone);
-        return updatedEntityClone;
-    }
-
-    public void delete(Long id) {
-        entityDao.delete(id);
-    }
-
+	}
 }

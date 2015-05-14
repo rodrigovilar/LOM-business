@@ -4,18 +4,18 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.lang3.SerializationUtils;
 
-import com.nanuvem.lom.api.Attribute;
-import com.nanuvem.lom.api.AttributeValue;
+import com.nanuvem.lom.api.PropertyType;
+import com.nanuvem.lom.api.Property;
+import com.nanuvem.lom.api.EntityType;
 import com.nanuvem.lom.api.Entity;
-import com.nanuvem.lom.api.Instance;
 import com.nanuvem.lom.api.MetadataException;
 import com.nanuvem.lom.business.validator.ValidationError;
 
 public class Util {
 
-	static void removeDefaultNamespace(Entity entity) {
+	static void removeDefaultNamespace(EntityType entity) {
 		if (entity == null) {
 			return;
 		}
@@ -26,24 +26,24 @@ public class Util {
 			return;
 		}
 
-		if (namespace.equals(EntityServiceImpl.DEFAULT_NAMESPACE)) {
+		if (namespace.equals(EntityTypeServiceImpl.DEFAULT_NAMESPACE)) {
 			entity.setNamespace("");
 		}
 	}
 
-	static void removeDefaultNamespace(List<Entity> list) {
-		for (Entity entity : list) {
+	static void removeDefaultNamespace(List<EntityType> list) {
+		for (EntityType entity : list) {
 			removeDefaultNamespace(entity);
 		}
 	}
 
-	static void setDefaultNamespace(Entity entity) {
+	static void setDefaultNamespace(EntityType entity) {
 		if (entity == null) {
 			return;
 		}
 
 		if (entity.getNamespace() == null || entity.getNamespace().equals("")) {
-			entity.setNamespace(EntityServiceImpl.DEFAULT_NAMESPACE);
+			entity.setNamespace(EntityTypeServiceImpl.DEFAULT_NAMESPACE);
 		}
 	}
 
@@ -64,26 +64,26 @@ public class Util {
 
 	static String setDefaultNamespace(String fullName) {
 		if (fullName != null && !fullName.contains(".")) {
-			fullName = EntityServiceImpl.DEFAULT_NAMESPACE + "." + fullName;
+			fullName = EntityTypeServiceImpl.DEFAULT_NAMESPACE + "." + fullName;
 		}
 		return fullName;
 	}
 
-	static void removeDefaultNamespace(Attribute attribute) {
+	static void removeDefaultNamespace(PropertyType attribute) {
 		if (attribute != null) {
-			removeDefaultNamespace(attribute.getEntity());
+			removeDefaultNamespace(attribute.getEntityType());
 		}
 	}
 
-	public static void removeDefaultNamespace(Instance instance) {
+	public static void removeDefaultNamespace(Entity instance) {
 		if (instance != null) {
-			removeDefaultNamespace(instance.getEntity());
+			removeDefaultNamespace(instance.getEntityType());
 		}
 	}
 
-	public static void removeDefaultNamespace(AttributeValue value) {
+	public static void removeDefaultNamespace(Property value) {
 		if (value != null) {
-			removeDefaultNamespace(value.getInstance());
+			removeDefaultNamespace(value.getEntity());
 		}
 	}
 
@@ -102,8 +102,8 @@ public class Util {
 		}
 	}
 
-    public static void removeDefaultNamespaceForInstance(List<Instance> instances) {
-        for (Instance instance : instances) {
+    public static void removeDefaultNamespaceForInstance(List<Entity> instances) {
+        for (Entity instance : instances) {
             removeDefaultNamespace(instance);
         }
     }
