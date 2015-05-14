@@ -2,10 +2,10 @@ package com.nanuvem.lom.business;
 
 import java.util.List;
 
-import com.nanuvem.lom.api.PropertyType;
+import com.nanuvem.lom.api.Entity;
 import com.nanuvem.lom.api.EntityType;
 import com.nanuvem.lom.api.Facade;
-import com.nanuvem.lom.api.Entity;
+import com.nanuvem.lom.api.PropertyType;
 import com.nanuvem.lom.api.dao.DaoFactory;
 import com.nanuvem.lom.business.validator.definition.TypeDefinitionManager;
 
@@ -17,12 +17,12 @@ public class BusinessFacade implements Facade {
 
 	private DaoFactory daoFactory;
 
-	public BusinessFacade(DaoFactory daoFactory) {
+	protected BusinessFacade(DaoFactory daoFactory) {
 		this.daoFactory = daoFactory;
 		entityService = new EntityTypeServiceImpl(daoFactory);
 		TypeDefinitionManager deployers = new TypeDefinitionManager();
-		attributeService = new PropertyTypeServiceImpl(daoFactory, entityService,
-				deployers);
+		attributeService = new PropertyTypeServiceImpl(daoFactory,
+				entityService, deployers);
 		instanceService = new EntityServiceImpl(daoFactory, entityService,
 				attributeService, deployers);
 	}
@@ -67,13 +67,14 @@ public class BusinessFacade implements Facade {
 		return attributeService.findPropertyTypeById(id);
 	}
 
-	public PropertyType findPropertyTypeByNameAndFullnameEntityType(String name,
-			String fullEntityName) {
-		return attributeService.findPropertyTypeByNameAndEntityTypeFullName(name,
-				fullEntityName);
+	public PropertyType findPropertyTypeByNameAndFullnameEntityType(
+			String name, String fullEntityName) {
+		return attributeService.findPropertyTypeByNameAndEntityTypeFullName(
+				name, fullEntityName);
 	}
 
-	public List<PropertyType> findPropertiesTypesByFullNameEntityType(String fullnameEntity) {
+	public List<PropertyType> findPropertiesTypesByFullNameEntityType(
+			String fullnameEntity) {
 		return attributeService.findAttributesByFullNameEntity(fullnameEntity);
 	}
 
