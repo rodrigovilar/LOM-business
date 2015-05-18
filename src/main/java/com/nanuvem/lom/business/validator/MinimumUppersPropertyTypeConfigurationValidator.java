@@ -2,7 +2,7 @@ package com.nanuvem.lom.business.validator;
 
 import java.util.List;
 
-import com.nanuvem.lom.business.validator.configuration.AttributeValidator;
+import com.nanuvem.lom.business.validator.configuration.PropertyTypeValidator;
 import com.nanuvem.lom.business.validator.configuration.ConfigurationFieldValidator;
 
 public class MinimumUppersPropertyTypeConfigurationValidator implements
@@ -32,7 +32,7 @@ public class MinimumUppersPropertyTypeConfigurationValidator implements
 		}
 	}
 
-	public AttributeValidator createFieldValidator(String field) {
+	public PropertyTypeValidator createFieldValidator(String field) {
 		return new ConfigurationFieldValidator(field, Integer.class);
 	}
 

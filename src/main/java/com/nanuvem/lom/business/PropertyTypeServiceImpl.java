@@ -15,7 +15,7 @@ import com.nanuvem.lom.api.dao.PropertyTypeDao;
 import com.nanuvem.lom.api.dao.DaoFactory;
 import com.nanuvem.lom.api.util.JsonNodeUtil;
 import com.nanuvem.lom.business.validator.ValidationError;
-import com.nanuvem.lom.business.validator.configuration.AttributeValidator;
+import com.nanuvem.lom.business.validator.configuration.PropertyTypeValidator;
 import com.nanuvem.lom.business.validator.definition.TypeDefinition;
 import com.nanuvem.lom.business.validator.definition.TypeDefinitionManager;
 
@@ -125,7 +125,7 @@ public class PropertyTypeServiceImpl {
 			PropertyType propertyType, JsonNode jsonNode) {
 		List<ValidationError> errors = new ArrayList<ValidationError>();
 
-		for (AttributeValidator validator : definition.getValidators()) {
+		for (PropertyTypeValidator validator : definition.getValidators()) {
 			validator.validateDefault(errors, jsonNode);
 		}
 

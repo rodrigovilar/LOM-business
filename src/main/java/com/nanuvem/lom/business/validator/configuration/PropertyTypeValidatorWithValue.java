@@ -8,15 +8,15 @@ import com.nanuvem.lom.api.Property;
 import com.nanuvem.lom.business.validator.ValidationError;
 import com.nanuvem.lom.business.validator.ValueValidator;
 
-public class AttributeValidatorWithValue<T> implements
-		AttributeValidator {
+public class PropertyTypeValidatorWithValue<T> implements
+		PropertyTypeValidator {
 
 	protected ValueValidator<T> valueValidator;
 	protected String defaultField;
 	protected String field;
 	private Class<T> clazz;
 
-	public AttributeValidatorWithValue(String field,
+	public PropertyTypeValidatorWithValue(String field,
 			String defaultField, ValueValidator<T> valueValidator, Class<T> clazz) {
 		this.field = field;
 		this.defaultField = defaultField;
@@ -26,7 +26,7 @@ public class AttributeValidatorWithValue<T> implements
 
 	
 	public void validateDefault(List<ValidationError> errors, JsonNode configuration) {
-		AttributeValidator fieldValidator = new ConfigurationFieldValidator(field, clazz);  
+		PropertyTypeValidator fieldValidator = new ConfigurationFieldValidator(field, clazz);  
 		fieldValidator.validateDefault(errors, configuration);
 
 		if (configuration.has(field)) {

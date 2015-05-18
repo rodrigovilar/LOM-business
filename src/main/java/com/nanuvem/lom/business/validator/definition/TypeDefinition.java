@@ -2,12 +2,12 @@ package com.nanuvem.lom.business.validator.definition;
 
 import java.util.List;
 
-import com.nanuvem.lom.business.validator.configuration.AttributeValidator;
+import com.nanuvem.lom.business.validator.configuration.PropertyTypeValidator;
 
 public interface TypeDefinition {
 
 	
-	List<AttributeValidator> getValidators();
+	List<PropertyTypeValidator> getValidators();
 
 	/**
 	 * Returns true when this attribute type deployer accepts

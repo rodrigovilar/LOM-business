@@ -9,7 +9,7 @@ import com.nanuvem.lom.api.Property;
 import com.nanuvem.lom.business.validator.ValidationError;
 
 public class MinAndMaxValidator implements
-		AttributeValidator {
+		PropertyTypeValidator {
 
 	private String maxField;
 	private String minField;

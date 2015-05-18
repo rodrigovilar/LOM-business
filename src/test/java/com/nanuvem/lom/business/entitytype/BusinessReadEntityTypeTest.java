@@ -1,10 +1,10 @@
-package com.nanuvem.lom.business.propertytype;
+package com.nanuvem.lom.business.entitytype;
 
 import com.nanuvem.lom.api.Facade;
-import com.nanuvem.lom.api.tests.propertytype.TextAttributeTest;
+import com.nanuvem.lom.api.tests.entitytype.ReadEntityTypeTest;
 import com.nanuvem.lom.business.FacadeFactory;
 
-public class BusinessTextAttributeTest extends TextAttributeTest {
+public class BusinessReadEntityTypeTest extends ReadEntityTypeTest {
 
 	@Override
 	public Facade createFacade() {

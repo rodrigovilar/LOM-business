@@ -8,7 +8,7 @@ import org.codehaus.jackson.JsonNode;
 import com.nanuvem.lom.api.Property;
 import com.nanuvem.lom.business.validator.ValidationError;
 
-public class TypeValidator implements AttributeValidator {
+public class TypeValidator implements PropertyTypeValidator {
 
 	private Class<?> clazz;
 

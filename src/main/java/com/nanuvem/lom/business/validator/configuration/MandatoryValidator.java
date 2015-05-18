@@ -10,7 +10,7 @@ import com.nanuvem.lom.api.Property;
 import com.nanuvem.lom.business.validator.ValidationError;
 
 public class MandatoryValidator implements
-		AttributeValidator {
+		PropertyTypeValidator {
 
 	public void validateDefault(List<ValidationError> errors, JsonNode configuration) {
 		//Do not need to validate default value

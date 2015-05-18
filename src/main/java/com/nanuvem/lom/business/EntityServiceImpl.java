@@ -16,7 +16,7 @@ import com.nanuvem.lom.api.dao.EntityDao;
 import com.nanuvem.lom.api.util.JsonNodeUtil;
 import com.nanuvem.lom.business.validator.ValidationError;
 import com.nanuvem.lom.business.validator.configuration.TypeValidator;
-import com.nanuvem.lom.business.validator.configuration.AttributeValidator;
+import com.nanuvem.lom.business.validator.configuration.PropertyTypeValidator;
 import com.nanuvem.lom.business.validator.definition.TypeDefinition;
 import com.nanuvem.lom.business.validator.definition.TypeDefinitionManager;
 
@@ -126,7 +126,7 @@ public class EntityServiceImpl {
 		if (configuration != null && !configuration.isEmpty()) {
 			JsonNode jsonNode = load(configuration);
 
-			for (AttributeValidator validator : definition.getValidators()) {
+			for (PropertyTypeValidator validator : definition.getValidators()) {
 				validator.validateValue(errors, jsonNode, value);
 			}
 		}

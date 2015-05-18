@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.nanuvem.lom.business.validator.configuration.AttributeValidator;
+import com.nanuvem.lom.business.validator.configuration.PropertyTypeValidator;
 import com.nanuvem.lom.business.validator.configuration.ConfigurationFieldValidator;
 
 public class MaximumRepeatPropertyTypeConfigurationValidator implements
@@ -44,7 +44,7 @@ public class MaximumRepeatPropertyTypeConfigurationValidator implements
 		}
 	}
 
-	public AttributeValidator createFieldValidator(String field) {
+	public PropertyTypeValidator createFieldValidator(String field) {
 		return new ConfigurationFieldValidator(field, Integer.class);
 	}
 

@@ -7,7 +7,7 @@ import org.codehaus.jackson.JsonNode;
 import com.nanuvem.lom.api.Property;
 import com.nanuvem.lom.business.validator.ValidationError;
 
-public class ConfigurationFieldValidator implements AttributeValidator {
+public class ConfigurationFieldValidator implements PropertyTypeValidator {
 
 	protected String field;
 	private Class<?> clazz;
