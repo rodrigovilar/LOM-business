@@ -55,7 +55,7 @@ public class EntityServiceImpl {
 			this.attributeValueDao.create(value);
 		}
 
-		return instanceDao.findInstanceById(newInstance.getId());
+		return instanceDao.findEntityById(newInstance.getId());
 	}
 
 	private List<Property> validateEntityAndAttributeValueOnInstance(
@@ -95,7 +95,7 @@ public class EntityServiceImpl {
 				this.attributeValueDao.update(value);
 			}
 		}
-		return instanceDao.findInstanceById(instance.getId());
+		return instanceDao.findEntityById(instance.getId());
 	}
 
 	private EntityType validateExistenceOfTheEntity(Entity instance) {
@@ -176,11 +176,11 @@ public class EntityServiceImpl {
 	}
 
 	public Entity findInstanceById(Long id) {
-		return this.instanceDao.findInstanceById(id);
+		return this.instanceDao.findEntityById(id);
 	}
 
 	public List<Entity> findInstancesByEntityId(Long entityId) {
-		return this.instanceDao.findInstancesByEntityId(entityId);
+		return this.instanceDao.findEntitiesByEntityTypeId(entityId);
 	}
 }
 
@@ -199,8 +199,8 @@ class InstanceDaoDecorator implements EntityDao {
 		return createdInstance;
 	}
 
-	public Entity findInstanceById(Long id) {
-		Entity instance = Util.clone(instanceDao.findInstanceById(id));
+	public Entity findEntityById(Long id) {
+		Entity instance = Util.clone(instanceDao.findEntityById(id));
 		Util.removeDefaultNamespace(instance);
 		return instance;
 	}
@@ -216,9 +216,9 @@ class InstanceDaoDecorator implements EntityDao {
 		instanceDao.delete(id);
 	}
 
-	public List<Entity> findInstancesByEntityId(Long entityId) {
+	public List<Entity> findEntitiesByEntityTypeId(Long entityId) {
 		List<Entity> instances = Util.clone(instanceDao
-				.findInstancesByEntityId(entityId));
+				.findEntitiesByEntityTypeId(entityId));
 		Util.removeDefaultNamespaceForInstance(instances);
 		return instances;
 	}
