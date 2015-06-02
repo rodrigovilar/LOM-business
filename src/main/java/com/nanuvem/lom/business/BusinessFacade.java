@@ -1,6 +1,7 @@
 package com.nanuvem.lom.business;
 
 import java.util.List;
+import java.util.Map;
 
 import com.nanuvem.lom.api.Entity;
 import com.nanuvem.lom.api.EntityType;
@@ -17,7 +18,7 @@ public class BusinessFacade implements Facade {
 
 	private DaoFactory daoFactory;
 
-	protected BusinessFacade(DaoFactory daoFactory) {
+	public BusinessFacade(DaoFactory daoFactory) {
 		this.daoFactory = daoFactory;
 		entityService = new EntityTypeServiceImpl(daoFactory);
 		TypeDefinitionManager deployers = new TypeDefinitionManager();
@@ -102,4 +103,13 @@ public class BusinessFacade implements Facade {
 	public DaoFactory getDaoFactory() {
 		return this.daoFactory;
 	}
+
+	@Override
+	public List<Entity> pesquisarEntityPeloNomeDePropertiesTypeEPeloValorDasProperties(
+			String fullnameEntityType,
+			Map<String, String> nomesDasPropertiesTypesEValoresDasProperties) {
+
+		return null;
+	}
+
 }
