@@ -2,6 +2,7 @@ package com.nanuvem.lom.business;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.jackson.JsonNode;
 
@@ -30,7 +31,8 @@ public class EntityServiceImpl {
 	private PropertyTypeServiceImpl attributeService;
 	private TypeDefinitionManager definitionManager;
 
-	EntityServiceImpl(DaoFactory daoFactory, EntityTypeServiceImpl entityService,
+	EntityServiceImpl(DaoFactory daoFactory,
+			EntityTypeServiceImpl entityService,
 			PropertyTypeServiceImpl attributeService,
 			TypeDefinitionManager definitionManager) {
 		this.entityService = entityService;
@@ -45,8 +47,7 @@ public class EntityServiceImpl {
 	public Entity create(Entity instance) {
 		List<Property> values = validateEntityAndAttributeValueOnInstance(instance);
 
-		List<Property> originalValues = new ArrayList<Property>(
-				values);
+		List<Property> originalValues = new ArrayList<Property>(values);
 		values.clear();
 		Entity newInstance = this.instanceDao.create(instance);
 
@@ -66,7 +67,8 @@ public class EntityServiceImpl {
 		}
 		EntityType entity;
 		try {
-			entity = this.entityService.findById(instance.getEntityType().getId());
+			entity = this.entityService.findById(instance.getEntityType()
+					.getId());
 		} catch (MetadataException e) {
 			throw new MetadataException("Unknown entity id: "
 					+ instance.getEntityType().getId());
@@ -75,8 +77,8 @@ public class EntityServiceImpl {
 		validateAndAssignDefaultValueInAttributesValues(instance, entity);
 		List<Property> values = instance.getProperties();
 		for (Property value : values) {
-			PropertyType attribute = attributeService.findPropertyTypeById(value
-					.getPropertyType().getId());
+			PropertyType attribute = attributeService
+					.findPropertyTypeById(value.getPropertyType().getId());
 			validateValue(attribute.getConfiguration(), value);
 		}
 		return values;
@@ -105,7 +107,8 @@ public class EntityServiceImpl {
 		}
 		EntityType entity;
 		try {
-			entity = this.entityService.findById(instance.getEntityType().getId());
+			entity = this.entityService.findById(instance.getEntityType()
+					.getId());
 		} catch (MetadataException e) {
 			throw new MetadataException("Unknown entity id: "
 					+ instance.getEntityType().getId());
@@ -139,8 +142,8 @@ public class EntityServiceImpl {
 			Entity instance, EntityType entity) {
 
 		for (Property attributeValue : instance.getProperties()) {
-			if (!(entity.getPropertiesTypes()
-					.contains(attributeValue.getPropertyType()))) {
+			if (!(entity.getPropertiesTypes().contains(attributeValue
+					.getPropertyType()))) {
 				throw new MetadataException("Unknown attribute for "
 						+ instance.getEntityType().getFullName() + ": "
 						+ attributeValue.getPropertyType().getName());
@@ -181,6 +184,16 @@ public class EntityServiceImpl {
 
 	public List<Entity> findInstancesByEntityId(Long entityId) {
 		return this.instanceDao.findEntitiesByEntityTypeId(entityId);
+	}
+
+	public List<Entity> findEntityByNameOfPropertiesTypeAndByValueOfProperties(
+			String fullnameEntityType,
+			Map<String, String> nameByPropertiesTypesAndValuesOfProperties) {
+
+		return instanceDao
+				.findEntityByNameOfPropertiesTypeAndByValueOfProperties(
+						fullnameEntityType,
+						nameByPropertiesTypesAndValuesOfProperties);
 	}
 }
 
@@ -223,6 +236,18 @@ class InstanceDaoDecorator implements EntityDao {
 		return instances;
 	}
 
+	public List<Entity> findEntityByNameOfPropertiesTypeAndByValueOfProperties(
+			String fullnameEntityType,
+			Map<String, String> nameByPropertiesTypesAndValuesOfProperties) {
+
+		List<Entity> instances = Util.clone(instanceDao
+				.findEntityByNameOfPropertiesTypeAndByValueOfProperties(
+						fullnameEntityType,
+						nameByPropertiesTypesAndValuesOfProperties));
+		Util.removeDefaultNamespaceForInstance(instances);
+		return instances;
+
+	}
 }
 
 class AttributeValueDaoDecorator implements PropertyDao {

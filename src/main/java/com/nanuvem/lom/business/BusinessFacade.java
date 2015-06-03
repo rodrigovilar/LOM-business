@@ -12,104 +12,108 @@ import com.nanuvem.lom.business.validator.definition.TypeDefinitionManager;
 
 public class BusinessFacade implements Facade {
 
-	private EntityTypeServiceImpl entityService;
-	private PropertyTypeServiceImpl attributeService;
-	private EntityServiceImpl instanceService;
+	private EntityTypeServiceImpl entityTypeService;
+	private PropertyTypeServiceImpl propertyTypeService;
+	private EntityServiceImpl entityService;
 
 	private DaoFactory daoFactory;
 
 	public BusinessFacade(DaoFactory daoFactory) {
 		this.daoFactory = daoFactory;
-		entityService = new EntityTypeServiceImpl(daoFactory);
+
+		entityTypeService = new EntityTypeServiceImpl(daoFactory);
+
 		TypeDefinitionManager deployers = new TypeDefinitionManager();
-		attributeService = new PropertyTypeServiceImpl(daoFactory,
-				entityService, deployers);
-		instanceService = new EntityServiceImpl(daoFactory, entityService,
-				attributeService, deployers);
+		propertyTypeService = new PropertyTypeServiceImpl(daoFactory,
+				entityTypeService, deployers);
+
+		entityService = new EntityServiceImpl(daoFactory, entityTypeService,
+				propertyTypeService, deployers);
 	}
 
 	public EntityTypeServiceImpl getEntityService() {
-		return this.entityService;
+		return this.entityTypeService;
 	}
 
 	public EntityType create(EntityType entity) {
-		return entityService.create(entity);
+		return entityTypeService.create(entity);
 	}
 
 	public EntityType findEntityTypeById(Long id) {
-		return entityService.findById(id);
+		return entityTypeService.findById(id);
 	}
 
 	public EntityType findEntityTypeByFullName(String fullName) {
-		return entityService.findByFullName(fullName);
+		return entityTypeService.findByFullName(fullName);
 	}
 
 	public List<EntityType> listAllEntitiesTypes() {
-		return entityService.listAll();
+		return entityTypeService.listAll();
 	}
 
 	public List<EntityType> listEntitiesTypesByFullName(String fragment) {
-		return entityService.listByFullName(fragment);
+		return entityTypeService.listByFullName(fragment);
 	}
 
 	public EntityType update(EntityType entity) {
-		return entityService.update(entity);
+		return entityTypeService.update(entity);
 	}
 
 	public void deleteEntityType(Long id) {
-		entityService.delete(id);
+		entityTypeService.delete(id);
 	}
 
 	public PropertyType create(PropertyType attribute) {
-		return attributeService.create(attribute);
+		return propertyTypeService.create(attribute);
 	}
 
 	public PropertyType findPropertyTypeById(Long id) {
-		return attributeService.findPropertyTypeById(id);
+		return propertyTypeService.findPropertyTypeById(id);
 	}
 
 	public PropertyType findPropertyTypeByNameAndFullnameEntityType(
 			String name, String fullEntityName) {
-		return attributeService.findPropertyTypeByNameAndEntityTypeFullName(
+		return propertyTypeService.findPropertyTypeByNameAndEntityTypeFullName(
 				name, fullEntityName);
 	}
 
 	public List<PropertyType> findPropertiesTypesByFullNameEntityType(
 			String fullnameEntity) {
-		return attributeService.findAttributesByFullNameEntity(fullnameEntity);
+		return propertyTypeService
+				.findAttributesByFullNameEntity(fullnameEntity);
 	}
 
 	public PropertyType update(PropertyType attribute) {
-		return attributeService.update(attribute);
+		return propertyTypeService.update(attribute);
 	}
 
 	public Entity update(Entity instance) {
-		return instanceService.update(instance);
+		return entityService.update(instance);
 	}
 
 	public Entity create(Entity instance) {
-		return instanceService.create(instance);
+		return entityService.create(instance);
 	}
 
 	public Entity findEntityById(Long id) {
-		return instanceService.findInstanceById(id);
+		return entityService.findInstanceById(id);
 	}
 
 	public List<Entity> findEntitiesByEntityTypeId(Long entityId) {
-		return instanceService.findInstancesByEntityId(entityId);
+		return entityService.findInstancesByEntityId(entityId);
+	}
+
+	@Override
+	public List<Entity> findEntityByNameOfPropertiesTypeAndByValueOfProperties(
+			String fullnameEntityType,
+			Map<String, String> nameByPropertiesTypesAndValuesOfProperties) {
+
+		return entityService
+				.findEntityByNameOfPropertiesTypeAndByValueOfProperties(fullnameEntityType, nameByPropertiesTypesAndValuesOfProperties);
 	}
 
 	@Override
 	public DaoFactory getDaoFactory() {
 		return this.daoFactory;
 	}
-
-	@Override
-	public List<Entity> pesquisarEntityPeloNomeDePropertiesTypeEPeloValorDasProperties(
-			String fullnameEntityType,
-			Map<String, String> nomesDasPropertiesTypesEValoresDasProperties) {
-
-		return null;
-	}
-
 }
