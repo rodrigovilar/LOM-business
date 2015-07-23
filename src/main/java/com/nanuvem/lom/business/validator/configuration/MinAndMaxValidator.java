@@ -5,11 +5,11 @@ import java.util.List;
 
 import org.codehaus.jackson.JsonNode;
 
-import com.nanuvem.lom.api.AttributeValue;
+import com.nanuvem.lom.api.Property;
 import com.nanuvem.lom.business.validator.ValidationError;
 
 public class MinAndMaxValidator implements
-		AttributeValidator {
+		PropertyTypeValidator {
 
 	private String maxField;
 	private String minField;
@@ -35,7 +35,7 @@ public class MinAndMaxValidator implements
 	}
 
 	public void validateValue(List<ValidationError> errors,
-			JsonNode configuration, AttributeValue value) {
+			JsonNode configuration, Property value) {
 		//Do not need to validate value
 	}
 

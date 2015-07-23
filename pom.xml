@@ -20,12 +20,13 @@
 			<artifactId>api</artifactId>
 			<version>0.0.8</version>
 		</dependency>
+
 		<dependency>
-			<groupId>com.nanuvem.lom.dao</groupId>
-			<artifactId>memory</artifactId>
-			<version>0.0.8</version>
-			<scope>test</scope>
+			<groupId>com.nanuvem.lom.kernel</groupId>
+			<artifactId>LOM-MySQLDAO</artifactId>
+			<version>0.0.1</version>
 		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -37,6 +38,12 @@
 			<artifactId>jackson-jaxrs</artifactId>
 			<version>1.9.12</version>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.4</version>
+		</dependency>
+
 	</dependencies>
 </project>
